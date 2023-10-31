@@ -1,14 +1,6 @@
-import mergeSort from "./mergeSort.js";
+import Node from "./Node.js";
 
-class Node {
-  constructor(value, left = null, right = null) {
-    this.value = value;
-    this.left = left;
-    this.right = right;
-  }
-}
-
-class Tree {
+export default class Tree {
   constructor(arr) {
     this.root = this.buildTree(arr);
   }
@@ -16,7 +8,7 @@ class Tree {
   buildTree(arr) {
     if (arr.length === 0) return null;
     // CleanArray removes duplicates and sorts the array with the helper mergeSort
-    const cleanArray = [...new Set(mergeSort(arr))];
+    const cleanArray = [...new Set(this.mergeSort(arr))];
     const mid = Math.floor(cleanArray.length / 2);
     // Create tree by using recursion to find the mid value to create node
     const node = new Node(
@@ -77,39 +69,41 @@ class Tree {
   }
 
   // left root right
-  inOrder(node = this.root, array = []) {
+  inorder(node = this.root, array = []) {
     if (!node) return [];
 
     if (!node) return;
-    this.inOrder(node.left, array);
+    this.inorder(node.left, array);
     array.push(node.value);
-    this.inOrder(node.right, array);
+    this.inorder(node.right, array);
     return array;
   }
 
   // root left right
-  preOrder(node = this.root, array = []) {
+  preorder(node = this.root, array = []) {
     if (!node) return [];
 
     if (!node) return;
     array.push(node.value);
-    this.preOrder(node.left, array);
-    this.preOrder(node.right, array);
+    this.preorder(node.left, array);
+    this.preorder(node.right, array);
     return array;
   }
 
   // left right root
-  postOrder(node = this.root, array = []) {
+  postorder(node = this.root, array = []) {
     if (!node) return [];
 
     if (!node) return;
-    this.postOrder(node.left, array);
-    this.postOrder(node.right, array);
+    this.postorder(node.left, array);
+    this.postorder(node.right, array);
     array.push(node.value);
     return array;
   }
 
-  height(value, node = this.find(value)) {
+  height(value) {
+    // Assign node the node of value
+    let node = this.find(value);
     if (!node) node = value;
     if (node === null) return -1;
     // Heights for left and right
@@ -120,6 +114,7 @@ class Tree {
   }
 
   depth(value, node = this.root) {
+    // Finds the assigns the node with value input
     if (this.find(value)) {
       value = this.find(value);
     } else {
@@ -139,41 +134,64 @@ class Tree {
   }
 
   reBalance() {
-    if (this.root === null || this.isBalanced(this.root)) return tree;
-    const array = this.inOrder(this.root);
-    return (tree = new Tree(array));
+    if (this.root === null || this.isBalanced(this.root)) return;
+    const unbalancedTree = this.levelOrder(this.root);
+    const cleanArray = [...new Set(this.mergeSort(unbalancedTree))];
+    this.root = this.buildTree(cleanArray);
   }
 
-  // Helper functions
+  // Helper function for buildTree
+  mergeSort(array) {
+    // Edge cases
+    if (array.length === 0 || array.some((value) => typeof value !== "number"))
+      return "Please submit an array of numbers.";
+
+    // Base case
+    if (array.length < 2) return array;
+
+    // Recursive case
+    const mid = Math.ceil(array.length / 2);
+    const leftHalf = array.slice(0, mid);
+    const rightHalf = array.slice(mid);
+
+    return this.merge(this.mergeSort(leftHalf), this.mergeSort(rightHalf));
+  }
+
+  // Helper funtion to merge after sorting
+  merge(aArray, bArray) {
+    const sorted = [];
+
+    // Both arrays must have a value to sort
+    while (aArray.length && bArray.length) {
+      aArray[0] <= bArray[0]
+        ? sorted.push(aArray.shift())
+        : sorted.push(bArray.shift());
+    }
+
+    return sorted.concat(aArray, bArray);
+  }
+
+  // Helper function for delete
   min(node) {
     if (!node.left) return node.value;
     return this.min(node.left);
   }
+
+  // Code supplied by TOP to console.log visual tree
+  prettyPrint(node = this.root, prefix = "", isLeft = true) {
+    if (node === null) {
+      return;
+    }
+    if (node.right !== null) {
+      this.prettyPrint(
+        node.right,
+        `${prefix}${isLeft ? "│   " : "    "}`,
+        false
+      );
+    }
+    console.log(`${prefix}${isLeft ? "└── " : "┌── "}${node.value}`);
+    if (node.left !== null) {
+      this.prettyPrint(node.left, `${prefix}${isLeft ? "    " : "│   "}`, true);
+    }
+  }
 }
-
-// TOP supplied to view tree in console
-const prettyPrint = (node, prefix = "", isLeft = true) => {
-  if (node === null) {
-    return;
-  }
-  if (node.right !== null) {
-    prettyPrint(node.right, `${prefix}${isLeft ? "│   " : "    "}`, false);
-  }
-  console.log(`${prefix}${isLeft ? "└── " : "┌── "}${node.value}`);
-  if (node.left !== null) {
-    prettyPrint(node.left, `${prefix}${isLeft ? "    " : "│   "}`, true);
-  }
-};
-
-let tree = new Tree([10, 20, 30, 40, 50, 60, 70]);
-prettyPrint(tree.root);
-
-console.log(tree.postOrder(tree.root));
-tree.insert(0);
-tree.insert(5);
-console.log(tree.isBalanced());
-prettyPrint(tree.root);
-tree.reBalance();
-prettyPrint(tree.root);
-console.log(tree.isBalanced());
-console.log(tree.min(tree.root));
